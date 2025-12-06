@@ -3,21 +3,138 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useRef, useState, useEffect } from "react";
 
 export default function BeyouStorePage() {
+  
+  const videoRef = useRef(null);
+  const [showControls, setShowControls] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [isMuted, setIsMuted] = useState(true);
+  const [progress, setProgress] = useState(0);
+
+  // auto hide controls after 2 sec
+  useEffect(() => {
+    if (showControls && isPlaying) {
+      const timer = setTimeout(() => setShowControls(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [showControls, isPlaying]);
+
+  // update seek bar
+  const handleTimeUpdate = () => {
+    const v = videoRef.current;
+    setProgress((v.currentTime / v.duration) * 100);
+  };
+
+  // seeking
+  const handleSeek = (e) => {
+    const v = videoRef.current;
+    const newTime = (e.target.value / 100) * v.duration;
+    v.currentTime = newTime;
+    setProgress(e.target.value);
+  };
+
+  // play/pause
+  const togglePlay = () => {
+    const v = videoRef.current;
+
+    if (v.paused) {
+      v.play();
+      setIsPlaying(true);
+    } else {
+      v.pause();
+      setIsPlaying(false);
+    }
+
+    setShowControls(true);
+  };
+
+  // mute/unmute
+  const toggleMute = () => {
+    const v = videoRef.current;
+    v.muted = !v.muted;
+    setIsMuted(v.muted);
+    setShowControls(true);
+  };
+
+
+
   return (
     <main className="min-h-screen bg-white text-gray-900 font-['goudy-old-style',Georgia,serif,sans-serif]">
       <div className="max-w-7xl mx-auto px-6 md:px-12 py-3">
 
         {/* ====== HERO / BANNER ====== */}
-          <header className="relative w-full h-[56vh] md:h-[90vh] overflow-hidden mb-12">
-         <video
-  src="https://res.cloudinary.com/dx2nzmgn6/video/upload/bu_chdgfk.mp4"
-  autoPlay
-  loop
-  playsInline
-  className="absolute inset-0 w-full h-full object-cover"
-></video>
+   <header className=" relative w-full  h-auto  md:h-[90vh] overflow-hidden  mb-12 group "
+      onClick={() => setShowControls(true)}
+    >
+      {/* VIDEO */}
+      <video
+        ref={videoRef}
+        src="https://res.cloudinary.com/dx2nzmgn6/video/upload/bu_chdgfk.mp4"
+        autoPlay
+        loop
+        muted={isMuted}
+        playsInline
+        onTimeUpdate={handleTimeUpdate}
+        className=" w-full  h-auto  aspect-video  md:absolute md:inset-0 md:w-full md:h-full md:object-cover"
+      ></video>
+
+      {/* Center play/pause */}
+      {showControls && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
+          <button
+            onClick={togglePlay}
+            className="bg-white bg-opacity-70 w-16 h-16 rounded-full flex items-center justify-center shadow-lg backdrop-blur-md mb-4"
+          >
+            {isPlaying ? (
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-black" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-black" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* Mute Button */}
+      {showControls && (
+        <button
+          onClick={toggleMute}
+          className="absolute top-4 right-4 bg-white bg-opacity-60 w-8 h-8 rounded-full flex items-center justify-center shadow-md backdrop-blur-md z-30"
+        >
+          {isMuted ? (
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M3 9v6h4l5 5V4L7 9H3z" />
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M3 9v6h4l5 5V4L7 9H3z" />
+              <path d="M16.5 12a4.5 4.5 0 01-4.5 4.5v-9a4.5 4.5 0 014.5 4.5z" />
+            </svg>
+          )}
+        </button>
+      )}
+
+      {/* SEEK BAR — hidden while playing, shown on hover or controls */}
+      {(showControls || !isPlaying) && (
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-[90%] z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 md:opacity-0 md:group-hover:opacity-100">
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={progress}
+            onChange={handleSeek}
+            className="w-full accent-white"
+          />
+        </div>
+      )}
+   
+
+
 
           {/* Gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/35 to-black/10" />
@@ -33,14 +150,15 @@ export default function BeyouStorePage() {
               >
                 Beyou Store
               </motion.h1>
-              <motion.p
-                initial={{ y: 12, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.12, duration: 0.6 }}
-                className="text-sm md:text-base text-white/90 mt-4 max-w-2xl text-left"
-              >
-                Transforming the fashion e-commerce experience in Pakistan with a trust-first approach, innovative marketing, and a strong brand identity.
-              </motion.p>
+             <motion.p
+  initial={{ y: 12, opacity: 0 }}
+  animate={{ y: 0, opacity: 1 }}
+  transition={{ delay: 0.12, duration: 0.6 }}
+  className="hidden md:block text-sm md:text-base text-white/90 mt-4 max-w-2xl text-left"
+>
+  Transforming the fashion e-commerce experience in Pakistan with a trust-first
+  approach, innovative marketing, and a strong brand identity.
+</motion.p>
             </div>
           </div>
         </header>
@@ -65,7 +183,7 @@ export default function BeyouStorePage() {
                 className="relative overflow-hidden shadow-md h-[360px] group cursor-pointer"
               >
                 <Image
-                  src="/images/beeweb1.jpg"
+                  src="/images/beyoustore23.jpg"
                   alt="Clarity-first Visual Identity"
                   fill
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -91,7 +209,7 @@ export default function BeyouStorePage() {
                 className="relative overflow-hidden shadow-md h-[360px] group cursor-pointer"
               >
                 <Image
-                  src="/images/beweb2.jpg"
+                  src="/images/beyoustore24.jpg"
                   alt="Educational Content Architecture"
                   fill
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -113,13 +231,13 @@ export default function BeyouStorePage() {
           <div className="md:hidden overflow-x-auto snap-x snap-mandatory -mx-6 px-6 flex gap-4">
             {[
               {
-                src: "/images/beeweb1.jpg",
+                src: "/images/beyoustore23.jpg",
                 title: "Clarity-first Visual Identity",
                 desc: "Clean, benefit-driven creative that removes confusion and builds credibility.",
                 link: "https://beyoustore.pk/",
               },
               {
-                src: "/images/beweb2.jpg",
+                src: "/images/beyoustore24.jpg",
                 title: "Educational Content Architecture",
                 desc: "Messaging that educates customers and answers objections before they arise.",
                 link: "https://beyoustore.pk/",
