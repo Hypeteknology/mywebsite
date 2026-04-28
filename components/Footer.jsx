@@ -34,6 +34,7 @@ export default function Footer() {
             <li><a href="/work" className="hover:text-white transition">Work</a></li>
             <li><a href="/expertise" className="hover:text-white transition">Expertise</a></li>
             <li><a href="/career" className="hover:text-white transition">Career</a></li>
+            <li><a href="/policies" className="hover:text-white transition">Policies</a></li>
             <li><a href="/contact" className="hover:text-white transition">Contact</a></li>
           </ul>
         </div>
